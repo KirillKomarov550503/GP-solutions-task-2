@@ -5,6 +5,14 @@ import java.util.Scanner;
 import java.util.Stack;
 
 public class Calculator {
+
+    private static class MyException extends Exception {
+        MyException(String message) {
+            super(message);
+        }
+    }
+
+
     private static int priority(char operator) {
         int priority = -1;
         switch (operator) {
@@ -34,39 +42,59 @@ public class Calculator {
     }
 
 
+    private static String correct(String expression) {
+        int length = expression.length();
+        char symbol;
+        boolean oldData = false;
+        boolean isNumber = false;
+        boolean finish = false;
+        boolean start = false;
+        StringBuilder stringBuilder = new StringBuilder(expression.length() + 2);
+        for (int i = 0; i < length; i++) {
+            symbol = expression.charAt(i);
+            stringBuilder.append(symbol);
+            if (!finish) {
+                if (symbol == '^') {
+                    stringBuilder.append('(');
+                    start = true;
+                }
+                if (start) {
+                    if ((symbol >= '0' && symbol <= '9') || symbol == ',' || symbol == '.')
+                        isNumber = true;
+                    if (oldData != isNumber) {
+                        stringBuilder.append(") ");
+                        finish = true;
+                    }
+                }
+            }
+            oldData = isNumber;
+        }
+        return stringBuilder.toString();
+    }
+
     public static BigDecimal calculate(String expression) {
-        BigDecimal result = new BigDecimal(0);
         Stack<Character> stack = new Stack<>();
         int expressionLength = expression.length();
         StringBuilder stringBuilder = new StringBuilder(expressionLength);
         char symbol;
         boolean operator = false;
-        boolean circumflex = false;
         for (int i = 0; i < expressionLength; i++) {
             symbol = expression.charAt(i);
-
             if ((symbol >= '0' && symbol <= '9') || symbol == ',' || symbol == '.') {
-                circumflex = false;
                 operator = false;
                 stringBuilder.append(symbol);
             } else {
-
                 int priorityResult = priority(symbol);
+
                 if (priorityResult > -1) {
                     if (operator || (stringBuilder.length() == 0 && priorityResult > 1)) {
                         if (symbol == '-' || symbol == '+') {
                             stringBuilder.append("0 ");
                         }
-
-                    }
-                    if(circumflex && (symbol == '-' || symbol == '+')){
-                        stringBuilder.append("0 ");
                     }
                     stringBuilder.append(' ');
                     if (symbol == '(')
                         operator = true;
-                    if(symbol == '^')
-                        circumflex = true;
                     if ((priorityResult == 0 && !stack.isEmpty()) ||
                             (!stack.isEmpty() && priorityResult > priority(stack.peek()))) {
                         stack.push(symbol);
@@ -79,7 +107,11 @@ public class Calculator {
                         stack.push(symbol);
                     }
 
+                } else {
+                    System.err.println("Wrong symbols in expression");
+                    System.exit(1);
                 }
+
             }
 
         }
@@ -92,7 +124,6 @@ public class Calculator {
             }
             stack.pop();
         }
-        System.out.println("Polish reverser note: " + stringBuilder);
         Stack<BigDecimal> decimalStack = new Stack<>();
         int outLineLength = stringBuilder.length();
         for (int i = 0; i < outLineLength; i++) {
@@ -122,14 +153,17 @@ public class Calculator {
                         decimalStack.push(number2.multiply(number1));
                         break;
                     case '/':
-                        decimalStack.push(number2.divide(number1));
+                        if (number1.equals(0)) {
+                            System.err.println("Divided by zero");
+                            System.exit(1);
+                        }
+                        decimalStack.push(number2.divide(number1, 5, BigDecimal.ROUND_HALF_UP));
                         break;
                     case '^':
                         double tempNum1 = Double.parseDouble(number2.toString());
                         double tempNum2 = Double.parseDouble(number1.toString());
                         BigDecimal tempRes = new BigDecimal(Math.pow(tempNum1, tempNum2));
-                        tempRes.setScale(5, BigDecimal.ROUND_HALF_UP);
-                        decimalStack.push(tempRes);
+                        decimalStack.push(tempRes.setScale(5, BigDecimal.ROUND_HALF_UP));
                 }
             }
         }
@@ -141,7 +175,8 @@ public class Calculator {
         System.out.println("Input expression: ");
         Scanner scanner = new Scanner(System.in);
         String expression = scanner.nextLine();
-        System.out.println("Res: " + calculate(expression));
+        System.out.println("Res: " + calculate(correct(expression)));
+
 
     }
 }
