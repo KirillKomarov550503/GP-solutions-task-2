@@ -1,0 +1,16 @@
+**/*.jar
+**/*.class
+**/*.log
+**/target/
+**/.settings/
+**/.project
+**/.classpath
+**/.springBeans
+
+# Package Files #
+*.jar
+*.war
+*.ear
+.idea/
+out/
+*.iml
