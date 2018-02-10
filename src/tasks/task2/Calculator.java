@@ -1,6 +1,7 @@
 package tasks.task2;
 
 import java.math.BigDecimal;
+import java.util.EmptyStackException;
 import java.util.Scanner;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -84,8 +85,41 @@ public class Calculator {
     }
 
 
-    public static BigDecimal calculate(String expression) {
+    private static boolean validate1(String line) {
+        Pattern pattern = Pattern.compile("[0-9]\\s+[0-9]");
+        Matcher matcher = pattern.matcher(line);
+        return matcher.find();
+    }
+
+    private static boolean validate2(String line) {
+        Pattern pattern = Pattern.compile("[+\\-*/]\\s*[+\\-*/^]");
+        Matcher matcher = pattern.matcher(line);
+        return matcher.find();
+    }
+
+    private static boolean validate3(String line) {
+        Pattern pattern = Pattern.compile("[0-9][,.]((\\s)|([0-9]*[,.]))");
+        Matcher matcher = pattern.matcher(line);
+        return matcher.find();
+    }
+
+    private static boolean validate4(String line) {
+        Pattern pattern = Pattern.compile("(([,.*/^].*)|(.*[,.+\\-*/^]))");
+        Matcher matcher = pattern.matcher(line);
+        return matcher.matches();
+    }
+
+
+    private static boolean validate(String expression) {
+        return validate1(expression) || validate2(expression) ||
+                validate3(expression) || validate4(expression);
+    }
+
+
+    public static BigDecimal calculate(String expression) throws EmptyStackException, StringIndexOutOfBoundsException, NumberFormatException {
         Stack<Character> stack = new Stack<>();
+        if(validate(expression))
+            errorMessage("Wrong input expression");
         int expressionLength = expression.length();
         StringBuilder stringBuilder = new StringBuilder(expressionLength);
         char symbol;
@@ -95,12 +129,12 @@ public class Calculator {
         for (int i = 0; i < expressionLength; i++) {
             symbol = expression.charAt(i);
             if (!allowedChar(symbol)) {
-                errorMessage("Wrong symbols in expression");
+//                errorMessage("Wrong symbols in expression");
             }
             if (numberPart(symbol)) {
                 operator = false;
                 if (prevNum && space) {
-                    errorMessage("Wrong symbols in expression");
+//                    errorMessage("Wrong symbols in expression");
                 }
                 prevNum = true;
                 space = false;
@@ -192,10 +226,14 @@ public class Calculator {
 
 
     public static void main(String[] args) {
-        System.out.println("Input expression: ");
+        System.out.print("Input expression: ");
         Scanner scanner = new Scanner(System.in);
         String expression = scanner.nextLine();
-        System.out.println("Res: " + calculate(correct(expression)));
+        try {
+            System.out.println("Res: " + calculate(correct(expression)));
+        } catch (EmptyStackException | StringIndexOutOfBoundsException e) {
+            errorMessage("Wrong input expression");
+        }
 
 
     }
