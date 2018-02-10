@@ -3,14 +3,10 @@ package tasks.task2;
 import java.math.BigDecimal;
 import java.util.Scanner;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Calculator {
-
-    private static class MyException extends Exception {
-        MyException(String message) {
-            super(message);
-        }
-    }
 
 
     private static int priority(char operator) {
@@ -59,7 +55,7 @@ public class Calculator {
                     start = true;
                 }
                 if (start) {
-                    if ((symbol >= '0' && symbol <= '9') || symbol == ',' || symbol == '.')
+                    if (numberPart(symbol))
                         isNumber = true;
                     if (oldData != isNumber) {
                         stringBuilder.append(") ");
@@ -72,21 +68,50 @@ public class Calculator {
         return stringBuilder.toString();
     }
 
+    private static boolean allowedChar(char symbol) {
+        Pattern pattern = Pattern.compile("^[0-9,.+/*^\\-\\s]$");
+        Matcher matcher = pattern.matcher(Character.toString(symbol));
+        return matcher.matches();
+    }
+
+    private static void errorMessage(String message) {
+        System.err.println(message);
+        System.exit(1);
+    }
+
+    private static boolean numberPart(char symbol) {
+        return (symbol >= '0' && symbol <= '9') || symbol == ',' || symbol == '.';
+    }
+
+
     public static BigDecimal calculate(String expression) {
         Stack<Character> stack = new Stack<>();
         int expressionLength = expression.length();
         StringBuilder stringBuilder = new StringBuilder(expressionLength);
         char symbol;
         boolean operator = false;
+        boolean prevNum = false;
+        boolean space = false;
         for (int i = 0; i < expressionLength; i++) {
             symbol = expression.charAt(i);
-            if ((symbol >= '0' && symbol <= '9') || symbol == ',' || symbol == '.') {
+            if (!allowedChar(symbol)) {
+                errorMessage("Wrong symbols in expression");
+            }
+            if (numberPart(symbol)) {
                 operator = false;
+                if (prevNum && space) {
+                    errorMessage("Wrong symbols in expression");
+                }
+                prevNum = true;
+                space = false;
                 stringBuilder.append(symbol);
             } else {
                 int priorityResult = priority(symbol);
-
+                if (symbol == ' ')
+                    space = true;
                 if (priorityResult > -1) {
+                    prevNum = false;
+                    space = false;
                     if (operator || (stringBuilder.length() == 0 && priorityResult > 1)) {
                         if (symbol == '-' || symbol == '+') {
                             stringBuilder.append("0 ");
@@ -106,10 +131,6 @@ public class Calculator {
                         }
                         stack.push(symbol);
                     }
-
-                } else {
-                    System.err.println("Wrong symbols in expression");
-                    System.exit(1);
                 }
 
             }
@@ -154,8 +175,7 @@ public class Calculator {
                         break;
                     case '/':
                         if (number1.equals(0)) {
-                            System.err.println("Divided by zero");
-                            System.exit(1);
+                            errorMessage("Divided by zero");
                         }
                         decimalStack.push(number2.divide(number1, 5, BigDecimal.ROUND_HALF_UP));
                         break;
