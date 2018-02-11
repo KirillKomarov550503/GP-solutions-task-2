@@ -151,7 +151,7 @@ public class Calculator {
                         decimalStack.push(number2.multiply(number1));
                         break;
                     case '/':
-                        if (number1.equals(new BigDecimal(0))) {
+                        if (number1.compareTo(new BigDecimal(0)) == 0) {
                             errorMessage("Divided by zero");
                         }
                         decimalStack.push(number2.divide(number1, 9, BigDecimal.ROUND_DOWN));
