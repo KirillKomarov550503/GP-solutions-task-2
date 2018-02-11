@@ -118,34 +118,20 @@ public class Calculator {
 
     public static BigDecimal calculate(String expression) throws EmptyStackException, StringIndexOutOfBoundsException, NumberFormatException {
         Stack<Character> stack = new Stack<>();
-        if(validate(expression))
+        if (validate(expression))
             errorMessage("Wrong input expression");
         int expressionLength = expression.length();
         StringBuilder stringBuilder = new StringBuilder(expressionLength);
         char symbol;
         boolean operator = false;
-        boolean prevNum = false;
-        boolean space = false;
         for (int i = 0; i < expressionLength; i++) {
             symbol = expression.charAt(i);
-            if (!allowedChar(symbol)) {
-//                errorMessage("Wrong symbols in expression");
-            }
             if (numberPart(symbol)) {
                 operator = false;
-                if (prevNum && space) {
-//                    errorMessage("Wrong symbols in expression");
-                }
-                prevNum = true;
-                space = false;
                 stringBuilder.append(symbol);
             } else {
                 int priorityResult = priority(symbol);
-                if (symbol == ' ')
-                    space = true;
                 if (priorityResult > -1) {
-                    prevNum = false;
-                    space = false;
                     if (operator || (stringBuilder.length() == 0 && priorityResult > 1)) {
                         if (symbol == '-' || symbol == '+') {
                             stringBuilder.append("0 ");
