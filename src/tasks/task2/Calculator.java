@@ -1,5 +1,6 @@
 package tasks.task2;
 
+import javax.sound.sampled.Line;
 import java.math.BigDecimal;
 import java.util.EmptyStackException;
 import java.util.Scanner;
@@ -44,26 +45,27 @@ public class Calculator {
         char symbol;
         boolean oldData = false;
         boolean isNumber = false;
-        boolean finish = false;
         boolean start = false;
         StringBuilder stringBuilder = new StringBuilder(expression.length() + 2);
         for (int i = 0; i < length; i++) {
             symbol = expression.charAt(i);
             stringBuilder.append(symbol);
-            if (!finish) {
-                if (symbol == '^') {
-                    stringBuilder.append('(');
-                    start = true;
-                }
-                if (start) {
-                    if (numberPart(symbol))
-                        isNumber = true;
-                    if (oldData != isNumber) {
-                        stringBuilder.append(") ");
-                        finish = true;
-                    }
+
+            if (symbol == '^') {
+                stringBuilder.append("( 0 ");
+                start = true;
+            }
+            if (start) {
+                if (numberPart(symbol))
+                    isNumber = true;
+                if (oldData != isNumber) {
+                    stringBuilder.append(") ");
+                    oldData = false;
+                    isNumber = false;
+                    start = false;
                 }
             }
+
             oldData = isNumber;
         }
         return stringBuilder.toString();
@@ -118,8 +120,8 @@ public class Calculator {
 
     public static BigDecimal calculate(String expression) throws EmptyStackException, StringIndexOutOfBoundsException, NumberFormatException {
         Stack<Character> stack = new Stack<>();
-        if (validate(expression))
-            errorMessage("Wrong input expression");
+//        if (validate(expression))
+//            errorMessage("Wrong input expression");
         int expressionLength = expression.length();
         StringBuilder stringBuilder = new StringBuilder(expressionLength);
         char symbol;
@@ -134,7 +136,7 @@ public class Calculator {
                 if (priorityResult > -1) {
                     if (operator || (stringBuilder.length() == 0 && priorityResult > 1)) {
                         if (symbol == '-' || symbol == '+') {
-                            stringBuilder.append("0 ");
+                            stringBuilder.append("@ ");
                         }
                     }
                     stringBuilder.append(' ');
@@ -165,6 +167,7 @@ public class Calculator {
             }
             stack.pop();
         }
+        System.out.println("Polish reverse note: " + stringBuilder);
         Stack<BigDecimal> decimalStack = new Stack<>();
         int outLineLength = stringBuilder.length();
         for (int i = 0; i < outLineLength; i++) {
@@ -194,7 +197,7 @@ public class Calculator {
                         decimalStack.push(number2.multiply(number1));
                         break;
                     case '/':
-                        if (number1.equals(0)) {
+                        if (number1.equals(new BigDecimal(0))) {
                             errorMessage("Divided by zero");
                         }
                         decimalStack.push(number2.divide(number1, 5, BigDecimal.ROUND_HALF_UP));
@@ -214,9 +217,17 @@ public class Calculator {
     public static void main(String[] args) {
         System.out.print("Input expression: ");
         Scanner scanner = new Scanner(System.in);
-        String expression = scanner.nextLine();
+        String line = scanner.nextLine();
+        Pattern pattern = Pattern.compile("\\^\\s*[+\\-]");
+        Matcher matcher = pattern.matcher(line);
+        String expression;
+        if (matcher.find()) {
+            expression = correct(line);
+        } else
+            expression = line;
+        System.out.println("Expression before calculate: " + expression);
         try {
-            System.out.println("Res: " + calculate(correct(expression)));
+            System.out.println("Res: " + calculate(expression));
         } catch (EmptyStackException | StringIndexOutOfBoundsException e) {
             errorMessage("Wrong input expression");
         }
