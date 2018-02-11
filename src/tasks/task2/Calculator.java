@@ -87,27 +87,35 @@ public class Calculator {
                 int priorityResult = priority(symbol);
                 if (priorityResult > -1) {
                     stringBuilder.append(' ');
-                    if ((priorityResult == 0 && !stack.isEmpty()) ||
-                            (!stack.isEmpty() && priorityResult > priority(stack.peek()))) {
-                        stack.push(symbol);
-                    } else {
-                        while (!stack.isEmpty() && priority(stack.peek()) >= priorityResult) {
+                    if(symbol == ')'){
+                        while(stack.peek()!='('){
                             stringBuilder.append(' ');
                             stringBuilder.append(stack.pop());
                             stringBuilder.append(' ');
                         }
-                        stack.push(symbol);
+                        stack.pop();
+                    }
+                    else{
+                        if ((priorityResult == 0 && !stack.isEmpty()) ||
+                                (!stack.isEmpty() && priorityResult > priority(stack.peek()))) {
+                            stack.push(symbol);
+                        } else {
+                            while (!stack.isEmpty() && priority(stack.peek()) >= priorityResult) {
+                                stringBuilder.append(' ');
+                                stringBuilder.append(stack.pop());
+                                stringBuilder.append(' ');
+                            }
+                            stack.push(symbol);
+                        }
                     }
                 }
             }
         }
         while (!stack.isEmpty()) {
             symbol = stack.peek();
-            if (symbol != '(' && symbol != ')') {
-                stringBuilder.append(' ');
-                stringBuilder.append(symbol);
-                stringBuilder.append(' ');
-            }
+            stringBuilder.append(' ');
+            stringBuilder.append(symbol);
+            stringBuilder.append(' ');
             stack.pop();
         }
         Stack<BigDecimal> decimalStack = new Stack<>();
@@ -146,13 +154,13 @@ public class Calculator {
                         if (number1.equals(new BigDecimal(0))) {
                             errorMessage("Divided by zero");
                         }
-                        decimalStack.push(number2.divide(number1, 5, BigDecimal.ROUND_HALF_UP));
+                        decimalStack.push(number2.divide(number1, 9, BigDecimal.ROUND_DOWN));
                         break;
                     case '^':
                         double tempNum1 = Double.parseDouble(number2.toString());
                         double tempNum2 = Double.parseDouble(number1.toString());
                         BigDecimal tempRes = new BigDecimal(Math.pow(tempNum1, tempNum2));
-                        decimalStack.push(tempRes.setScale(5, BigDecimal.ROUND_HALF_UP));
+                        decimalStack.push(tempRes.setScale(9, BigDecimal.ROUND_DOWN));
                 }
             }
         }
