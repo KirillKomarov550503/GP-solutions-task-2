@@ -5,27 +5,36 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 public class Main {
 
+    private static void error(String error) {
+        System.err.println(error);
+        System.exit(1);
+    }
+
+
     private static boolean test(String line, String param) {
-        String[] params = param.split("\\s+");
-        String[] words = line.split("\\s+");
-        for (String par : params) {
-            try {
-                Pattern pattern = Pattern.compile(par);
-                Matcher matcher;
-                for (String word : words) {
-                    matcher = pattern.matcher(word);
-                    if (matcher.matches())
+        Pattern paramPattern = Pattern.compile("[a-zA-z\\s]+");
+        Matcher paramMatcher = paramPattern.matcher(param);
+        if (paramMatcher.matches()) {
+            String[] params = param.split("\\s+");
+            if (params.length == 0) {
+                error("Wrong input parameter");
+            } else {
+                for (String par : params) {
+                    Pattern pattern = Pattern.compile("(^" + par + "\\s+.*)|" +
+                            "(.*\\s+" + par + "\\s+.*)|" + "(.*\\s+" + par + "$)");
+                    if (pattern.matcher(line).find())
                         return true;
                 }
-            } catch (PatternSyntaxException e) {
-                for (String word : words) {
-                    if (param.equals(word))
-                        return true;
-                }
+            }
+        } else {
+            String[] words = line.split("\\s+");
+            Pattern pattern = Pattern.compile(param);
+            for (String word : words) {
+                if (pattern.matcher(word).matches())
+                    return true;
             }
         }
         return false;
@@ -46,6 +55,7 @@ public class Main {
         System.out.print("Program parameter: " + param + "\n" +
                 "Strings" + "\n");
         stringList.forEach(System.out::println);
+
 
     }
 }
